@@ -17,7 +17,7 @@ You are looking for a messaging service written in Python.
 This service has four main functions:
 
 - Submits a text message  to a recipient, where the recipient is identified using email, phone number or other id.
-- Fetches not previously fetched messages. 
+- Fetches not previously fetched messages.
 - Delete on or more messages.
 - Fetches a slice (between start index and stop index) of all messages (including previously fetched ones) ordered by time.
 
@@ -33,7 +33,7 @@ This service was developed and tested in a Linux/OSX environment and the install
 
 You will need to clone the project source code to your machine
 
-> git clone 
+> git clone https://github.com/marodrig/messaging_service_app
 
 ### Built with & Requirements
 
@@ -69,7 +69,7 @@ More info on pyenv:
 
 You know how pip and virtualenv are basic tools for Python development? Wouldn't it be nice if we had something that merged both? pipenv is the answer.
 
-The best way to install pipenv on OSX you can use homebrew:
+The best way to install pipenv on OSX is to use homebrew:
 
 > $ brew install pipenv
 
@@ -77,21 +77,21 @@ More info about pipenv:
 
 [https://pipenv.readthedocs.io/en/latest/](https://pipenv.readthedocs.io/en/latest/)
 
-#### Using pipenv to install Flask and other dependencies.
+#### Using pipenv to install Flask and other dependencies
 
-If you cloned the respository you should have a pipfile, this works similar to requirements.txt in pip.  We can simply type the following command in the command line to install our dependencies.
+This repository includes a pipfile, we can use the pipfile similarly to a requirements.txt file in pip.  We can simply type the following command in the command line to install our dependencies.
 
 > $ pipenv install
-
-#### Starting Flask app
-
-
 
 #### Security check with pipenv
 
 > pipenv check
 
 ## Usage
+
+You need to start the Flask app using the following command:
+
+> pipenv
 
 ## REST-API reference
 
@@ -100,7 +100,9 @@ If you cloned the respository you should have a pipfile, this works similar to r
 | Status code | Meaning  |
 |:---:|:---|
 |  200 | OK  |
-|  400 |     |
+| 400 | Client side error. |
+|  403 | Forbidden, this service is HTTP only.    |
+|  500 | Server side error. |
 
 ### End-point reference
 
