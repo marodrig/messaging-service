@@ -18,6 +18,7 @@ fetched_messages = {}
 def submit_message(message):
     """
     Submits the given message to the intended recipient.
+    add to database.
 
     Args:
 
@@ -38,10 +39,11 @@ def submit_message(message):
         return jsonify(status=404, error='Error')
 
 
-@app.route('/fetch-messages/', methods=['GET'])
+@app.route('/messages/', methods=['GET'])
 def fetch_messages():
     """
     Fetch messages not fetched previously
+    Retrieve from datastore. use set to track previously fetched.
 
     Args:
 
@@ -54,6 +56,7 @@ def fetch_messages():
         app.logger.debug('start-idx in HTTP request.')
         app.logger.debug('start-idx: {0}'.format(start_idx))
         app.logger.debug('start-idx: {0}'.format(stop_idx))
+        #TODO query all messages, order by time return splice[start_idx:stop_idx]
     return jsonify(status=200, messages=['Great!', 'Awesome'])
     # messages = []
     # for message in messages:
