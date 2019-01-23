@@ -3,11 +3,13 @@ ORM model for a message.
 
 """
 import datetime
-import os
-import sys
+# import os
+# import sys
 
 from sqlalchemy import (Column, DateTime, Integer, String, create_engine)
-from sqlaclhemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 
 class Message(Base):
@@ -23,10 +25,12 @@ class Message(Base):
     def serialize(self):
         """
         """
-        return {'id': self.id,
-                'message_text': self.message_text,
-                'recipiend_id': self.recipient_id,
-                'date_sent': self.date_sent}
+        return {
+            'id': self.id,
+            'message_text': self.message_text,
+            'recipiend_id': self.recipient_id,
+            'date_sent': self.date_sent}
 
-engine = create_engine()
+
+engine = create_engine('sqlite:///datastore.db')
 Base.metadata.create_all(engine)
