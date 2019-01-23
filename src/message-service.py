@@ -7,12 +7,13 @@ Ordered by increasing or decreasing order.
 
 """
 import datetime
-from flask import Flask, abort, jsonify, request, url_for
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
-from models import Message
 
+from flask import Flask, abort, jsonify, request, url_for, make_response
+from models import Message
+from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 
 app = Flask(__name__)
 
@@ -22,7 +23,7 @@ session = DBSession()
 fetched_messages_set = set()
 
 
-@app.route('/submit/', methods=['POST'])
+@app.route('/messages/submit', methods=['POST'])
 def submit_message():
     """
     Submits the given message to the intended recipient.
@@ -44,49 +45,57 @@ def submit_message():
             session.commit()
         except IntegrityError as ie:
             app.logger.error("Data integrity error: {}".format(ie))
-        return jsonify(status=200, message=message.serialize)
+        return jsonify(status_code=200, message=message.serialize)
     else:
-        return jsonify(status=400, error="This service only accepts JSON data.")
+        return jsonify(status_code=400, error="This service only accepts JSON data.")
 
 
-@app.route('/messages/', methods=['GET'])
+@app.route('/messages/delete/<int:message_id>', methods=['DELETE'])
+def delete_messages(message_id):
+    """
+    """
+    count_deleted = session.query(Message).filter_by(id=message_id).delete()
+    return jsonify(status_code=200, count=count_deleted)
+
+
+
+@app.route('/messages/fetch', methods=['GET'])
 def fetch_messages():
     """
     Fetch messages not fetched previously
     Retrieve from datastore. use set to track previously fetched.
 
     Args:
+        start-idx(int): starting index used to slice query result
+        stop-idx(int): stop index used to slice query result
 
     Return:
+        result(list): list of messages as specified in the query
 
     """
-    messages = session.query(Message).all()
+    messages = session.query(Message)
     result = []
-    for message in messages:
-        if message not in fetched_messages_set:
-            fetched_messages_set.add(message)
-            result.append(message)
-    if 'ordered-by-time' in request.args:
-        result = session.query(Message).order_by('date_sent').all()
-        if 'start-idx' and 'stop-idx' in request.args:
-            start_idx = request.args.get('start-idx', None)
-            stop_idx = request.args.get('stop-idx', None)
-            result = session.query(Message).order_by('date_sent').slice(start_idx, stop_idx)
+    if 'start-idx' and 'stop-idx' in request.args:
+        start_idx = int(request.args.get('start-idx', None))
+        stop_idx = int(request.args.get('stop-idx', None))
+        if stop_idx < start_idx:
+            return jsonify(
+                status_code=401,
+                message='start-idx must be smaller than stop-idx.')
+        try:
+            result = messages.order_by('date_sent').slice(
+                                                    start_idx,
+                                                    stop_idx)
+        except NoResultFound as nrfe:
+            app.logger.error("No result found for query: {}".format(nrfe))
+            abort(400)
+    else:
+        for message in messages.all():
+            if message not in fetched_messages_set:
+                fetched_messages_set.add(message)
+                result.append(message)
 
-    return jsonify(status=200, messages=[message.serialize for message in result])
-    # if 'start-idx' and 'stop-idx' in request.args:
-    #     start_idx = request.args.get('start-idx', None)
-    #     stop_idx = request.args.get('stop-idx', None)
-    #     app.logger.debug('start-idx in HTTP request.')
-    #     app.logger.debug('start-idx: {0}'.format(start_idx))
-    #     app.logger.debug('start-idx: {0}'.format(stop_idx))
-        #TODO query all messages, order by time return splice[start_idx:stop_idx]
-    # return jsonify(status=200, messages=['Great!', 'Awesome'])
-    # messages = []
-    # for message in messages:
-    #     if message in fetch_messages.items():
-    #         return jsonify(success=True, messages=messages)
-    # return jsonify(success=False, error=404), 404
+    return jsonify(status_code=200, messages=[message.serialize for message in result])
 
 
 if __name__ == '__main__':

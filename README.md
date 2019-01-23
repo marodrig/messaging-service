@@ -91,7 +91,9 @@ This repository includes a pipfile, we can use the pipfile similarly to a requir
 
 You need to start the Flask app using the following command:
 
-> pipenv
+> pipenv run python message-service.py
+
+The messaging service will be running in localhost at port 8080.
 
 ## REST-API reference
 
