@@ -91,9 +91,30 @@ This repository includes a pipfile, we can use the pipfile similarly to a requir
 
 You need to start the Flask app using the following command:
 
-> pipenv run python message-service.py
+> pipenv run python src/message-service.py
 
-The messaging service will be running in localhost at port 8080.
+The messaging service will be running in localhost at port 8080, and can be tested using curl from the command line on OSX:
+
+
+Submit a message to a recipient:
+
+> curl 'localhost:8080/messages/submit' -d '{"message": "bar", "recipient-id":123}' -H 'Content-Type: application/json'
+
+Fetch a slice of all messages ordered by time between start-idx and stop-idx(non-inclusive)
+
+> curl 'localhost:8080/messages/fetch?start-idx=1&stop-idx=4'
+
+Fetch all non-yet-fetch messages:
+
+>curl 'localhost:8080/messages/fetch'
+
+Delete a message with message-id:
+
+> curl 'localhost:8080/messages/delete?message-id=100' -i -X DELETE
+
+Delete a message with recipient-id:
+
+> curl 'localhost:8080/messages/delete?recipient-id=100' -i -X DELETE
 
 ## REST-API reference
 
@@ -110,9 +131,11 @@ The messaging service will be running in localhost at port 8080.
 
 | URL | HTTP Method | action | arguments | response example |
 | :--- | :---: | :---: | :--- | :---: |
-| /submit-message/ | POST | submit given message to recipient with given id. | message-txt, recipient-id | {status=200, time-submitted=, message=, recipient=}|
-| /fetch-messages/ | GET | Fetch messages not yet fetched. | time-ordered, start-idx, stop-idx | {status=200, messages=[{time-submitted=, message=, recipient=}, {time-submitted=, message=, recipient=}]} |
-| /delete-message/ | DELETE | Delete one or more messages. | messages | {status=200, deleted-messages-count=10}|
+| /messages/submit?message="bar"&recipient-id=123 | POST | submit given message to recipient with given id. | message, recipient-id | {"message": {"date_sent": "Wed, 23 Jan 2019 18:09:52 GMT", "id": 5,"message_text": "bar", "recipiend_id": "123"},"status": 200}|
+| /messages/fetch | GET | Fetch messages not yet fetched. | None| {"messages": [{"date_sent": "Wed, 23 Jan 2019 17:15:03 GMT", "id": 1, "message_text": "bar", "recipiend_id": "123"}], "status_code":200} |
+| /messages/delete?message-id=1 | DELETE | Delete one one message with id equal to message_id | message_id | {"message": 1, "status_code": 200}|
+| /messages/delete?recipient-id=123> | DELETE | Delete one one message with id equal to message_id | message_id | {"message": 1, "status_code": 200}|
+| /messages/fetch?start-idx=1&stop_idx=5 | GET | Fetch a slice of messages  between start-idx and stop-idx ordered by time from oldest to newest. | start-idx, stop-idx | {"messages": [{"date_sent": "Wed, 23 Jan 2019 17:15:03 GMT", "id": 1, "message_text": "bar", "recipiend_id": "123"}, {"date_sent": "Wed, 23 Jan 2019 17:27:05 GMT", "id": 2, "message_text": "bar", "recipiend_id": "123"} ],"status_code": 200}|
 
 ## Running tests
 

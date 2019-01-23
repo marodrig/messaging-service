@@ -50,12 +50,37 @@ def submit_message():
         return jsonify(status_code=400, error="This service only accepts JSON data.")
 
 
-@app.route('/messages/delete/<int:message_id>', methods=['DELETE'])
-def delete_messages(message_id):
+@app.route('/messages/delete', methods=['DELETE'])
+def delete_messages():
     """
+    Delete messages.
+    If given the message id, a single message is delete.
+    If a recipient id is given, all messages sent to this recipient are deletes.
+
+    Args:
+        message-id(int): Message id of the message to be deleted
+        recipient-id(String): Unique id of the recipient of all messages to be deleted.
+
+    Returns:
+        count_deleted(int): Number of messages deleted.
+
     """
-    count_deleted = session.query(Message).filter_by(id=message_id).delete()
-    return jsonify(status_code=200, count=count_deleted)
+    count_deleted = -100
+    if 'message-id' in request.args:
+        app.logger.debug("request arguments work.")
+        message_id = request.args.get('message-id', None)
+        count_deleted = session.query(Message).filter_by(id=message_id).delete()
+        session.commit()
+    elif 'recipient-id' in request.args:
+        app.logger.debug("Deleting all messages to a specific recipient.")
+        recipient_id = request.args.get('recipient-id', None)
+        count_deleted = session.query(Message).filter(Message.recipient_id==recipient_id).delete()
+        session.commit()
+
+    if count_deleted >= 0:
+        return jsonify(status_code=200, count=count_deleted)
+    else:
+        return jsonify(status_code=500, message="Error deleting messages.")
 
 
 
