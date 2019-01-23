@@ -106,7 +106,7 @@ You need to start the Flask app using the following command:
 
 ### End-point reference
 
-| End-point | HTTP-method | action | arguments | response example |
+| URL | HTTP Method | action | arguments | response example |
 | :--- | :---: | :---: | :--- | :---: |
 | /submit-message/ | POST | submit given message to recipient with given id. | message-txt, recipient-id | {status=200, time-submitted=, message=, recipient=}|
 | /fetch-messages/ | GET | Fetch messages not yet fetched. | time-ordered, start-idx, stop-idx | {status=200, messages=[{time-submitted=, message=, recipient=}, {time-submitted=, message=, recipient=}]} |
