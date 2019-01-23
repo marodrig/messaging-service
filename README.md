@@ -89,12 +89,15 @@ This repository includes a pipfile, we can use the pipfile similarly to a requir
 
 ## Usage
 
+First start your sqlite3 database by typing:
+
+> pipenv run python src/database.py
+
 You need to start the Flask app using the following command:
 
 > pipenv run python src/message-service.py
 
 The messaging service will be running in localhost at port 8080, and can be tested using curl from the command line on OSX:
-
 
 Submit a message to a recipient:
 
