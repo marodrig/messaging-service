@@ -8,14 +8,22 @@ Ordered by increasing or decreasing order.
 """
 import datetime
 from flask import Flask, abort, jsonify, request, url_for
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
+from models import Message
 
 
 app = Flask(__name__)
-fetched_messages = {}
+
+engine = create_engine('sqlite:///datastore.db')
+DBSession = sessionmaker(bind=engine)
+session = DBSession()
+fetched_messages_set = set()
 
 
 @app.route('/submit/', methods=['POST'])
-def submit_message(message):
+def submit_message():
     """
     Submits the given message to the intended recipient.
     add to database.
@@ -25,18 +33,20 @@ def submit_message(message):
     Return:
 
     """
-    if 'message' and 'recipient-id' in request.args:
-        request_json = request.get_json()
-        message = request_json.get('message', None)
-        recipient = request_json.get('recipient-id', None)
-        time_message_sent = datetime.datetime.now().time()
-        fetched_messages[(message, recipient)] = time_message_sent
-        return jsonify(
-                        status=200,
-                        recipient=recipient,
-                        time_sent=time_message_sent)
+    if request.is_json:
+        data = request.get_json()
+        message = Message(
+            message_text=data.get('message', None),
+            recipient_id=data.get('recipient-id', None)
+        )
+        session.add(message)
+        try:
+            session.commit()
+        except IntegrityError as ie:
+            app.logger.error("Data integrity error: {}".format(ie))
+        return jsonify(status=200, message=message.serialize)
     else:
-        return jsonify(status=404, error='Error')
+        return jsonify(status=400, error="This service only accepts JSON data.")
 
 
 @app.route('/messages/', methods=['GET'])
@@ -50,14 +60,28 @@ def fetch_messages():
     Return:
 
     """
-    if 'start-idx' and 'stop-idx' in request.args:
-        start_idx = request.args.get('start-idx', None)
-        stop_idx = request.args.get('stop-idx', None)
-        app.logger.debug('start-idx in HTTP request.')
-        app.logger.debug('start-idx: {0}'.format(start_idx))
-        app.logger.debug('start-idx: {0}'.format(stop_idx))
+    messages = session.query(Message).all()
+    result = []
+    for message in messages:
+        if message not in fetched_messages_set:
+            fetched_messages_set.add(message)
+            result.append(message)
+    if 'ordered-by-time' in request.args:
+        result = session.query(Message).order_by('date_sent').all()
+        if 'start-idx' and 'stop-idx' in request.args:
+            start_idx = request.args.get('start-idx', None)
+            stop_idx = request.args.get('stop-idx', None)
+            result = session.query(Message).order_by('date_sent').slice(start_idx, stop_idx)
+
+    return jsonify(status=200, messages=[message.serialize for message in result])
+    # if 'start-idx' and 'stop-idx' in request.args:
+    #     start_idx = request.args.get('start-idx', None)
+    #     stop_idx = request.args.get('stop-idx', None)
+    #     app.logger.debug('start-idx in HTTP request.')
+    #     app.logger.debug('start-idx: {0}'.format(start_idx))
+    #     app.logger.debug('start-idx: {0}'.format(stop_idx))
         #TODO query all messages, order by time return splice[start_idx:stop_idx]
-    return jsonify(status=200, messages=['Great!', 'Awesome'])
+    # return jsonify(status=200, messages=['Great!', 'Awesome'])
     # messages = []
     # for message in messages:
     #     if message in fetch_messages.items():
