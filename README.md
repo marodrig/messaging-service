@@ -134,11 +134,11 @@ Delete a message with recipient-id:
 
 | URL | HTTP Method | action | arguments | response example |
 | :--- | :---: | :---: | :--- | :---: |
-| /messages/submit?message="bar"&recipient-id=123 | POST | submit given message to recipient with given id. | message, recipient-id | {"message": {"date_sent": "Wed, 23 Jan 2019 18:09:52 GMT", "id": 5,"message_text": "bar", "recipiend_id": "123"},"status": 200}|
+| /messages/submit?message="bar"&recipient-id=123 | POST | submit given message to recipient with given id. | message, recipient-id | {"message": {"date_sent": "Wed, 23 Jan 2019 18:09:52 GMT", "id": 5,"message_text": "bar", "recipiend_id": "123"},"status_code": 200}|
 | /messages/fetch | GET | Fetch messages not yet fetched. | None| {"messages": [{"date_sent": "Wed, 23 Jan 2019 17:15:03 GMT", "id": 1, "message_text": "bar", "recipiend_id": "123"}], "status_code":200} |
 | /messages/delete?message-id=1 | DELETE | Delete one one message with id equal to message_id | message_id | {"message": 1, "status_code": 200}|
 | /messages/delete?recipient-id=123> | DELETE | Delete one one message with id equal to message_id | message_id | {"message": 1, "status_code": 200}|
-| /messages/fetch?start-idx=1&stop_idx=5 | GET | Fetch a slice of messages  between start-idx and stop-idx ordered by time from oldest to newest. | start-idx, stop-idx | {"messages": [{"date_sent": "Wed, 23 Jan 2019 17:15:03 GMT", "id": 1, "message_text": "bar", "recipiend_id": "123"}, {"date_sent": "Wed, 23 Jan 2019 17:27:05 GMT", "id": 2, "message_text": "bar", "recipiend_id": "123"} ],"status_code": 200}|
+| /messages/fetch?start-idx=1&stop-idx=5 | GET | Fetch a slice of messages  between start-idx and stop-idx ordered by time from oldest to newest. | start-idx, stop-idx | {"messages": [{"date_sent": "Wed, 23 Jan 2019 17:15:03 GMT", "id": 1, "message_text": "bar", "recipiend_id": "123"}, {"date_sent": "Wed, 23 Jan 2019 17:27:05 GMT", "id": 2, "message_text": "bar", "recipiend_id": "123"} ],"status_code": 200}|
 
 ## Running tests
 
