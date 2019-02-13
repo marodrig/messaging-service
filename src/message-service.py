@@ -14,7 +14,8 @@ from models import Message
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import (NoResultFound, ObjectDeletedError,
+                                StaleDataError)
 
 app = Flask(__name__)
 
@@ -35,6 +36,7 @@ def message_endpoint():
     Return:
 
     """
+    resp = None
     if request.method == 'POST':
         if request.is_json:
             data = request.get_json()
@@ -47,19 +49,35 @@ def message_endpoint():
                 session.commit()
             except IntegrityError as ie:
                 app.logger.error("Data integrity error: {}".format(ie))
-                return jsonify(message='Resource not created.', error=ie), 204
-            return jsonify(message=message.serialize), 201
+                return make_response(
+                        jsonify(message='Resource not created.', error=ie),
+                        204)
+            resp = make_response(
+                        jsonify(message=message.serialize),
+                        201)
+            resp.headers['Content-Type'] += '; charset=utf-8'
+            resp.headers['Location'] = '/v1/messages/{}'.format(message.id)
+            return resp
         else:
-            return jsonify(error="This service only accepts JSON data."), 400
+            resp = make_response(
+                    jsonify(error={'message': 'This service only accepts JSON data.'}),
+                    400)
+            return resp
     elif request.method == 'GET':
         messages_qs = session.query(Message)
         result = []
+        if 'Accept' in request.headers and 'application/json' not in request.headers.get('Accept', '').split(';'):
+            resp = make_response(
+                    jsonify(error={'message': 'This API support application/json media type.'}),
+                    406)
+            return resp
         if 'start-idx' and 'stop-idx' in request.args:
             start_idx = int(request.args.get('start-idx'))
             stop_idx = int(request.args.get('stop-idx'))
             if stop_idx < start_idx:
-                return jsonify(
-                    message='start-idx must be smaller than stop-idx.'), 401
+                return make_response(
+                        jsonify(message='start-idx must be smaller than stop-idx.'),
+                        400)
             try:
                 result = messages_qs.order_by('date_sent').slice(
                                                     start_idx,
@@ -78,27 +96,35 @@ def message_endpoint():
                     fetched_messages_set.add(message)
                     result.append(message)
         if result:
-            return jsonify(messages=[message.serialize for message in result]), 200
+            return make_response(
+                    jsonify(messages=[message.serialize for message in result]),
+                    200)
         else:
             return jsonify(error="No new messages to fetch."), 404
     elif request.method == 'DELETE':
         count_deleted = None
-        if 'message-id' in request.args:
-            app.logger.debug("request arguments work.")
-            message_id = request.args.get('message-id')
-            count_deleted = session.query(Message).filter_by(id=message_id).delete()
-            session.commit()
-        elif 'recipient-id' in request.args:
-            app.logger.debug("Deleting all messages to a specific recipient.")
-            recipient_id = request.args.get('recipient-id')
-            count_deleted = session.query(Message).filter(Message.recipient_id == recipient_id).delete()
-            session.commit()
-
+        if 'messages-id' in request.args:
+            messages_ids = map(int, request.args.get('messages-id').split(','))
+            app.logger.debug("ids passed to delete: {}".format(messages_ids))
+            for message_id in messages_ids:
+                try:
+                    count_deleted = session.query(Message).filter_by(id=message_id).delete()
+                    session.commit()
+                except ObjectDeletedError as ode:
+                    app.logger.error(ode)
+                    abort(404)
+                except StaleDataError as sde:
+                    app.logger.error(sde)
+                    abort(500)
         if count_deleted:
             return jsonify(count=count_deleted), 204
         else:
-            return jsonify(message="Error deleting messages."), 500
-    return jsonify(message='Not a supported action.'), 400
+            return make_response(
+                    jsonify(message="Error deleting messages."),
+                    500)
+    return make_response(
+                jsonify(message='Not a supported action.'),
+                400)
 
 
 if __name__ == '__main__':
