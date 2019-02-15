@@ -36,6 +36,7 @@ class PyTest(unittest.TestCase):
         response = self.app.post('/v1/messages',
                                  data=jsonify({'message': 'this message',
                                                 'recipient-id': 123}))
+        self.assertIn('Location', response.headers)
 
     def tearDown(self):
         """

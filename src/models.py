@@ -12,28 +12,28 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class Link(Base):
-    """
-    """
-    __tablename__ = 'link'
-    rel = Column(String(64), nullable=False)
-    href = Column(String(64), nullable=False)
-    action = Column(String(64), nullable=False)
-    _types = Column(String(128))
+# class Link(Base):
+#     """
+#     """
+#     __tablename__ = 'link'
+#     rel = Column(String(64), nullable=False)
+#     href = Column(String(64), nullable=False)
+#     action = Column(String(64), nullable=False)
+#     _types = Column(String(128))
 
-    @property
-    def types(self):
-        return [type for type in self._types.split(';') if type]
+#     @property
+#     def types(self):
+#         return [type for type in self._types.split(';') if type]
 
-    @types.setter
-    def types(self, value):
-        self._types += "{};".format(value)
+#     @types.setter
+#     def types(self, value):
+#         self._types += "{};".format(value)
 
 
-class Operation(Base):
-    """
-    """
-    __tablename__ = 'operation'
+# class Operation(Base):
+#     """
+#     """
+#     __tablename__ = 'operation'
 
 
 class Message(Base):

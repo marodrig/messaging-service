@@ -10,7 +10,7 @@ import datetime
 
 from flask import (Flask, Response, abort, jsonify, make_response, request,
                    url_for)
-from models import Message
+from src.models import Message
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
