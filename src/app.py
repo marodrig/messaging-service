@@ -117,7 +117,9 @@ def message_endpoint():
                     app.logger.error(sde)
                     abort(500)
         if count_deleted:
-            return jsonify(count=count_deleted), 204
+            return make_response(
+                    jsonify(count=count_deleted),
+                    204)
         else:
             return make_response(
                     jsonify(message="Error deleting messages."),
