@@ -37,8 +37,8 @@ class PyTest(unittest.TestCase):
         """
         response = self.app.get('/v1/messages',
                                 query_string={
-                                    'start-idx': '0',
-                                    'stop-idx': '6'})
+                                    'startIdx': '0',
+                                    'stopIdx': '6'})
         self.assertEqual(200, response.status_code)
 
     def test_post_error_code_when_not_json(self):
@@ -61,7 +61,7 @@ class PyTest(unittest.TestCase):
         response = self.app.post('/v1/messages',
                                  data=json.dumps({
                                      'message': 'this message',
-                                     'recipient-id': '123'}),
+                                     'recipientId': '123'}),
                                  headers={
                                      'content-type': 'application/json'})
         self.assertIn('Location', response.headers)
@@ -72,7 +72,7 @@ class PyTest(unittest.TestCase):
         response = self.app.post('/v1/messages',
                                  data=json.dumps({
                                      'message': 'testing',
-                                     'recipient-id': '562'}),
+                                     'recipientId': '562'}),
                                  headers={
                                      'content-type': 'application/json'})
         self.assertEqual(201, response.status_code)
@@ -82,17 +82,17 @@ class PyTest(unittest.TestCase):
         """
         response = self.app.delete('/v1/messages',
                                    query_string={
-                                    'messages-id': '1'})
+                                    'messagesId': '10'})
         self.assertEqual(204, response.status_code)
 
     def test_put_success(self):
         """
         """
         response = self.app.put('/v1/messages',
-                                 json={
+                                json={
                                      'message': 'message'
                                  })
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(405, response.status_code)
         
     def tearDown(self):
         """
